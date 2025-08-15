@@ -1,6 +1,0 @@
-ticker,companyName,sector,country,marketCap,peRatio,revenueGrowth,netIncomeGrowth,netProfitMargin,debtEquityRatio
-AAPL,Apple Inc.,Technology,US,3162207576000,37.287278415656736,,,,
-MSFT,Microsoft Corporation,Technology,US,3797804963800,38.508221725515114,,,,
-GOOGL,Alphabet Inc.,Communication Services,US,2368792377351,23.292381989252682,,,,
-TSLA,"Tesla, Inc.",Consumer Cyclical,US,1042658967000,181.98287798036463,,,,
-AMZN,"Amazon.com, Inc.",Consumer Cyclical,US,2449840464000,38.78057436537942,,,,
