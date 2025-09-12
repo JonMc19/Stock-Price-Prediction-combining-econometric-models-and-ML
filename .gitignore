@@ -83,6 +83,7 @@ Icon?
 __MACOSX/
 
 # Virtual environments
+venv
 venv/
 ENV/
 env/
