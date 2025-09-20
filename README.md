@@ -73,11 +73,7 @@ Building a machine learning model to estimate future stock prices for the follow
 
 3. Dependence on regressor forecasts: Prophet requires future values of exogenous variables. Since these are predicted with ARIMA, any errors in ARIMA forecasts propagate into Prophet’s final predictions.
 
-4. Simplified feature set: Only a limited number of fundamentals and macroeconomic indicators are used. Excluding other financial ratios or market data (e.g., volatility, technical indicators) may limit accuracy.
-
-5. No hyperparameter optimization: The models are used largely with default or basic parameters. A systematic search (grid/random/Bayesian) could improve performance.
-
-6. Stationarity assumptions (ARIMA): ARIMA requires stationary input series, and while transformations are applied, fundamental data may still violate assumptions, impacting forecast stability.
+4. Stationarity assumptions (ARIMA): ARIMA requires stationary input series, and while transformations are applied, fundamental data may still violate assumptions, impacting forecast stability.
 
 # 8. How to Make a Prediction
 
@@ -97,3 +93,15 @@ Building a machine learning model to estimate future stock prices for the follow
 # 9. Issues to Keep in Mind
 
 1. When merging fundamental data with macroeconomic data, keep in mind that companies do not always report earnings in calendar quarters. Since macro data is published strictly on calendar quarters, misalignment can occur and the resulting merged DataFrame may be empty if dates do not match.  
+
+2. Incompatability with pdmarima and 
+
+# 10. Possible imporovement
+
+1. Add more regressors, specially for the macro level data for example inflation, government deficits. On a fundamental level basis cash flow could also be added.
+
+2. Add a longer time series.
+
+2. Complement the time series analysis with a cross-sectional analysis.
+
+3. Hyperparameter optimization. The model are used with default or basic parameters. A systematic search (grid/random/Bayesian) could improve performance.
