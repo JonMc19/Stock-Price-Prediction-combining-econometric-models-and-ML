@@ -104,4 +104,4 @@ Building a machine learning model to estimate future stock prices for the follow
 
 2. Complement the time series analysis with a cross-sectional analysis.
 
-3. Hyperparameter optimization. The model are used with default or basic parameters. A systematic search (grid/random/Bayesian) could improve performance.
+3. Hyperparameter optimization. The model uses default or basic parameters. A systematic search (grid/random/Bayesian) could improve performance.
