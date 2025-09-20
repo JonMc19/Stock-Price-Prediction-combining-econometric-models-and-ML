@@ -96,7 +96,7 @@ Building a machine learning model to estimate future stock prices for the follow
 
 2. Incompatability with pdmarima and 
 
-# 10. Possible imporovement
+# 10. Possible improvments
 
 1. Add more regressors, specially for the macro level data for example inflation, government deficits. On a fundamental level basis cash flow could also be added.
 
