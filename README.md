@@ -3,7 +3,7 @@ Building a machine learning model to estimate future stock prices for the follow
 
 ### 2. Data Collection and Data Cleaning
 
-The whole pipeline — scraping, merging, ARIMA + Prophet modeling, backtesting, and plotting — lives
+The whole pipeline — scraping, merging, ARIMA/ARDL + Prophet modeling, backtesting, and plotting — lives
 in a single notebook: [`Time series analysis/pipeline/full_pipeline.ipynb`](Time%20series%20analysis/pipeline/full_pipeline.ipynb).
 It replaces four earlier, separate notebooks (kept for reference under
 [`Time series analysis/old/`](Time%20series%20analysis/old/)).
@@ -59,7 +59,11 @@ currently collected — see [Possible improvements](#10-possible-improvements).
 
 1. The Prophet model is used to generate forecasts of the target variable (y).
 2. Since Prophet requires future values of the exogenous variables, these regressors must first be forecasted.
-3. To obtain these future regressors, an `auto_arima` (pmdarima) model is fit per fundamental metric with quarterly seasonality (`m=4`), producing projections for the next 4 quarters (`FUTURE_PERIODS`). Macro regressors (GDP growth, interest rate) are held at their last observed value rather than forecasted.
+3. To obtain these future regressors, each fundamental metric is forecast two ways and the better one is kept:
+   - An `auto_arima` (pmdarima) model with quarterly seasonality (`m=4`).
+   - An ARDL (AutoRegressive Distributed Lag) model (`statsmodels`), using the metric's own lags plus lags of the macro regressors (GDP growth, interest rate), with lag order chosen via `ardl_select_order` (AIC).
+
+   For each metric, whichever model has the lower backtest MAE wins, and its full-history forecast feeds the rest of the pipeline. Macro regressors themselves (GDP growth, interest rate) are held at their last observed value rather than forecasted, both as Prophet's future regressors and as ARDL's future exogenous inputs.
 
 # 5. Evaluation
 
@@ -84,11 +88,11 @@ A single combined plot is generated showing:
 
 2.  Short forecast horizon: The current setup only predicts 4 quarters ahead. Longer horizons (1–5 years) would require additional validation and may accumulate significant error.
 
-3. Dependence on regressor forecasts: Prophet requires future values of exogenous variables. Since these are predicted with ARIMA, any errors in ARIMA forecasts propagate into Prophet’s final predictions. ARIMA's own forecast intervals are also discarded — only the point forecast feeds Prophet — so `yhat_lower`/`yhat_upper` understate true uncertainty for future quarters.
+3. Dependence on regressor forecasts: Prophet requires future values of exogenous variables. Since these are predicted with ARIMA or ARDL (whichever wins the backtest comparison per metric), any errors in those forecasts propagate into Prophet's final predictions. The winning model's own forecast intervals are also discarded — only the point forecast feeds Prophet — so `yhat_lower`/`yhat_upper` understate true uncertainty for future quarters.
 
-4. Stationarity assumptions (ARIMA): ARIMA requires stationary input series, and while transformations are applied, fundamental data may still violate assumptions, impacting forecast stability.
+4. Stationarity assumptions (ARIMA) / lag selection (ARDL): ARIMA requires stationary input series, and while transformations are applied, fundamental data may still violate assumptions, impacting forecast stability. ARDL's lag order is also chosen by AIC over a limited search space (`ARDL_MAXLAG`, `ARDL_MAXORDER`), so it may not find the globally optimal lag structure.
 
-5. Single train/test split: backtesting uses one fixed holdout window rather than a rolling-origin (walk-forward) backtest, which would give a more reliable error estimate.
+5. Single train/test split: both the Prophet backtest and the ARIMA-vs-ARDL model selection in Step 5c use one fixed holdout window rather than a rolling-origin (walk-forward) backtest, which would give a more reliable error estimate.
 
 # 8. How to Run a Prediction
 
@@ -99,8 +103,10 @@ A single combined plot is generated showing:
 5. Run the notebook top to bottom:
    - **Steps 1–3** scrape/fetch fundamentals, macro data, and price (cached to CSV after the first run).
    - **Step 4** merges them into one modeling dataset, joined on date via `pd.merge_asof` (nearest calendar quarter, within `MACRO_TOLERANCE_DAYS`).
-   - **Step 5** forecasts each fundamental forward with ARIMA.
-   - **Step 6** builds the future frame Prophet needs (ARIMA forecasts + held-flat macro regressors).
+   - **Step 5a** forecasts each fundamental forward with ARIMA (`auto_arima`).
+   - **Step 5b** forecasts each fundamental forward with ARDL (own lags + macro lags), holding macro regressors flat for the forecast horizon.
+   - **Step 5c** compares ARIMA vs. ARDL backtest MAE per metric and picks the winner's full-history forecast.
+   - **Step 6** builds the future frame Prophet needs (winning ARIMA/ARDL forecasts + held-flat macro regressors).
    - **Step 7** fits Prophet (once on full history, once on the backtest-truncated history) and forecasts price.
    - **Step 8** prints MAE/RMSE/R² for both the full and backtest forecasts.
    - **Step 9** plots observed price, the full forecast, and the backtest forecast together.
@@ -123,8 +129,8 @@ A single combined plot is generated showing:
 
 4. Hyperparameter optimization. The model uses default or basic parameters. A systematic search (grid/random/Bayesian) could improve performance.
 
-5. Walk-forward (rolling-origin) backtesting instead of a single train/test split, for a more reliable error estimate.
+5. Walk-forward (rolling-origin) backtesting instead of a single train/test split, for a more reliable error estimate (this would also make the ARIMA-vs-ARDL model selection more robust).
 
-6. Propagate ARIMA's forecast uncertainty into Prophet's regressors instead of using point forecasts only.
+6. Propagate the winning model's (ARIMA or ARDL) forecast uncertainty into Prophet's regressors instead of using point forecasts only.
 
 7. Multi-ticker run: loop the pipeline over every entry in `TICKER_SLUGS` to build a model-comparison table across companies.

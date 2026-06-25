@@ -11,3 +11,4 @@ fredapi==0.5.2
 pmdarima==2.0.4
 beautifulsoup4==4.15.0
 matplotlib==3.11.0
+statsmodels==0.14.6
